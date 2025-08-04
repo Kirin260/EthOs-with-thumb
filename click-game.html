@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EthOS with thumb</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background: url('OsSite.jpg') no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    #startMenu {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    #startMenu h1 {
+      font-size: 40px;
+      color: #00e676;
+      text-shadow: 0 0 10px #00e676, 0 0 20px #00e676;
+      margin-bottom: 20px;
+    }
+
+    #startButton {
+      padding: 12px 30px;
+      font-size: 20px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(to right, #00c853, #64dd17);
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 0 10px #64dd17;
+      transition: transform 0.2s;
+    }
+
+    #startButton:hover {
+      transform: scale(1.05);
+    }
+
+    #gameArea {
+      width: 100%;
+      height: 80vh;
+      position: relative;
+      background-color: rgba(255, 255, 255, 0.12);
+      overflow: hidden;
+      margin-top: 20px;
+      border-radius: 16px;
+    }
+
+    .character {
+      width: 120px;
+      height: 120px;
+      cursor: pointer;
+      position: absolute;
+      top: 41%;
+      left: 51%;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .character:active {
+      transform: translate(-50%, -50%) scale(0.9);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+      50% { transform: translate(-50%, -50%) translateY(-8px); }
+    }
+
+    #score, #timer {
+      display: inline-block;
+      background: rgba(0,0,0,0.6);
+      padding: 8px 16px;
+      border-radius: 12px;
+      color: white;
+      font-size: 22px;
+      margin: 10px;
+      text-shadow: 1px 1px 3px black;
+      position: relative;
+      top: 20px; /* <<< posisi diturunkan */
+    }
+
+    .particle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: #ff4081;
+      border-radius: 50%;
+      opacity: 1;
+      pointer-events: none;
+      animation: explode 600ms ease-out forwards;
+    }
+
+    @keyframes explode {
+      0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--x), var(--y)) scale(0.5);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="startMenu">
+    <h1>EthOS with Thumb!</h1>
+    <button id="startButton">Start</button>
+  </div>
+
+  <div id="score">Score: 0</div>
+  <div id="timer">Timer: 60</div>
+
+  <div id="gameArea">
+    <img id="character" class="character" src="karakter.png" alt="Karakter" />
+  </div>
+
+  <audio id="tapSound" src="when-code.mp3" preload="auto"></audio>
+
+  <script>
+    let score = 0;
+    let timeLeft = 60;
+    let gameStarted = false;
+    let timer;
+
+    const character = document.getElementById('character');
+    const scoreDisplay = document.getElementById('score');
+    const timerDisplay = document.getElementById('timer');
+    const tapSound = document.getElementById('tapSound');
+    const gameArea = document.getElementById('gameArea');
+    const startMenu = document.getElementById('startMenu');
+    const startButton = document.getElementById('startButton');
+
+    startButton.addEventListener('click', () => {
+      startMenu.style.display = 'none';
+      character.addEventListener('click', tapCharacter);
+    });
+
+    function startGame() {
+      gameStarted = true;
+      timer = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = `Waktu: ${timeLeft}`;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          character.removeEventListener('click', tapCharacter);
+          alert(`Don't give up for code! Your score: ${score}`);
+          resetGame();
+        }
+      }, 1000);
+    }
+
+    function tapCharacter() {
+      if (!gameStarted) startGame();
+
+      score++;
+      scoreDisplay.textContent = `Score: ${score}`;
+      tapSound.currentTime = 0;
+      tapSound.play();
+
+      const rect = character.getBoundingClientRect();
+      const areaRect = gameArea.getBoundingClientRect();
+      const centerX = rect.left - areaRect.left + rect.width / 2;
+      const centerY = rect.top - areaRect.top + rect.height / 2;
+      createParticles(centerX, centerY);
+    }
+
+    function resetGame() {
+      score = 0;
+      timeLeft = 10;
+      gameStarted = false;
+      scoreDisplay.textContent = 'Score: 0';
+      timerDisplay.textContent = 'Timer: 60';
+      character.addEventListener('click', tapCharacter);
+    }
+
+    function createParticles(x, y) {
+      const number = 8;
+      for (let i = 0; i < number; i++) {
+        const particle = document.createElement('div');
+        particle.classList.add('particle');
+
+        const offsetX = (Math.random() - 0.5) * 100 + 'px';
+        const offsetY = (Math.random() - 0.5) * 100 + 'px';
+        particle.style.left = `${x}px`;
+        particle.style.top = `${y}px`;
+        particle.style.setProperty('--x', offsetX);
+        particle.style.setProperty('--y', offsetY);
+
+        gameArea.appendChild(particle);
+
+        setTimeout(() => {
+          particle.remove();
+        }, 600);
+      }
+    }
+
+    character.addEventListener('click', tapCharacter);
+  </script>
+
+</body>
+</html>
