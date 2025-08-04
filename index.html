@@ -160,7 +160,7 @@
       gameStarted = true;
       timer = setInterval(() => {
         timeLeft--;
-        timerDisplay.textContent = `Waktu: ${timeLeft}`;
+        timerDisplay.textContent = `Timer: ${timeLeft}`;
         if (timeLeft <= 0) {
           clearInterval(timer);
           character.removeEventListener('click', tapCharacter);
